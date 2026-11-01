@@ -3,6 +3,7 @@ services:
   - type: web
     name: duodesk-relay
     runtime: node
+    region: singapore # pick the region nearest both computers: every keystroke crosses it twice
     rootDir: relay
     plan: free # free instances sleep after 15 min without requests; Starter keeps it always on
     buildCommand: npm ci --omit=dev
