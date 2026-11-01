@@ -64,7 +64,7 @@ async function start(m) {
     const track = stream.getVideoTracks()[0];
     track.contentHint = 'motion';
     track.onended = () => alive(me) && report(me, 'ended', 'The captured ' + (m.offer.kind === 'window' ? 'window' : 'monitor') + ' went away');
-    const pc = (me.pc = new RTCPeerConnection({ iceServers: [] }));
+    const pc = (me.pc = new RTCPeerConnection(m.ice || { iceServers: [] }));
     const tr = pc.addTransceiver(track, { direction: 'sendonly', streams: [stream] });
     const audio = stream.getAudioTracks()[0];
     if (audio) pc.addTransceiver(audio, { direction: 'sendonly', streams: [stream] });

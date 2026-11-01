@@ -109,7 +109,7 @@ class Discovery extends EventEmitter {
 
   // Ask a phone at address to connect to us (the phone tile; a phone has no server to pair with).
   invite(address) {
-    if (String(address).startsWith('ble:')) {
+    if (String(address).startsWith('ble:') || address === '127.0.0.1') { // Bluetooth, or the cloud relay
       for (const x of this.extras) {
         const d = x.invite && x.list().find((e) => e.address === address);
         if (d) return x.invite(d.id);

@@ -21,6 +21,7 @@ const identity = require('./identity');
 const Screen = require('./screen');
 const Clip = require('./clip');
 const setupIpc = require('./ipc');
+const { CloudRelay } = require('../shared/cloudrelay.js');
 const Helper = require('./helper');
 const Kvm = require('./kvm');
 const firewall = require('./firewall');
@@ -124,6 +125,7 @@ let hud = null;
 let about = null; // shared/about.js, read once for the About page
 let quitting = false;
 let discovery = null;
+let relay = null; // the cloud relay (shared/cloudrelay.js): a computer on another network, as if it were here
 let link = null;
 let settings = null;
 let device = null;
@@ -226,6 +228,22 @@ function start() {
     resolveAddress: (macId) => discovery.get(macId),
   });
   link = new Peer(guest);
+  // The cloud relay: the computer at the other end is in Nearby (127.0.0.1), our session through it
+  // uses its TURN relays, and pairing through it confirms by itself (the relay code is the proof).
+  relay = new CloudRelay({ WebSocket: require('ws'), info: () => ({ ...discovery.self }) });
+  discovery.extras.push(relay);
+  relay.on('change', pushState);
+  link.relayIce = () => (guest.authed && relay.isRelaySocket(guest.ws) ? relay.ice() : null);
+  guest.onState(() => relay.autoConfirm(() => guest.pairState, () => guest.confirmCode()));
+  // A host asked through the relay: back to it if paired, else pair with it (no one has to be there).
+  relay.on('invite', (d) => {
+    if (!d) return;
+    if (guest.pairing && guest.pairing.macId === d.id) return discovery.emit('invite', d);
+    relay.clearInvite(d.id);
+    if (!guest.pairState && !link.hosting) guest.startPairing({ address: d.address, port: d.port, macName: d.name, id: d.id });
+  });
+  require('electron').ipcMain.handle('relay', (_e, m) => relay.handle(m)); // General › Cloud relay (shared/ui-relay.js)
+  relay.load(store);
   startHost(guest);
   link.onState(() => {
     discovery.wantProbes = link.snapshot().link.state !== 'connected'; // probe every 10 s only while not connected
@@ -405,6 +423,7 @@ async function startHost(guest) {
     const pairing = new HostPairing(server, { id: device.id, name: device.name, fp: id.fp }, { busy: () => guest.authed, yieldTo: () => guest.yieldSession() });
     pairing.on('request', showMain); // a code to compare: bring the window up
     link.attachHost(server, pairing);
+    relay.watchHost(server, pairing); // a computer through the cloud relay: its media and its pairing
     hostServer = server;
     bleHost = new BleHost({
       helper, server,
@@ -541,7 +560,7 @@ function loadCamera() {
   vcam = new VirtualCam({ driver: require('./vcam'), cfg: () => settings.camera, save: saveSettings, onChange: pushState, onReady: () => phoneViews && phoneViews.bridge._tellPhone(), ui: () => mainWin });
   const computer = () => link.status.state === 'connected' && !(link.current && link.current.os === P.OS.ANDROID);
   camShare = new CamShare({
-    link: { on: (t, fn) => link.on(t, fn), send: (m) => link.send(m), connected: computer, ble: () => !!(link.current && link.current.transport === 'ble'), closed: (fn) => link.on('closed', fn) },
+    link: { on: (t, fn) => link.on(t, fn), send: (m) => link.send(m), connected: computer, ble: () => !!(link.current && link.current.transport === 'ble'), ice: () => (link.current && link.current.ice) || null, closed: (fn) => link.on('closed', fn) },
     cfg: () => settings.camera,
     save: saveSettings,
     popup: (kind, text) => hud && hud.show(kind, text),
@@ -1007,6 +1026,7 @@ function buildState() {
     ...link.snapshot(),
     peer: peerView(),
     found: discovery.list(),
+    relay: relay ? relay.view() : null,
     discovery: { ...discovery.status },
     addresses: ownAddresses(),
     stream: { ...screen.state, remote: screen.remote, watching: screen.sentAccept === true },

@@ -90,7 +90,7 @@ api.onAudio((a) => { audioCfg = a; applyAudio(); });
 
 async function onOffer(msg) {
   closePc();
-  const my = (pc = new RTCPeerConnection({ iceServers: [] }));
+  const my = (pc = new RTCPeerConnection(msg.ice || { iceServers: [] }));
   session = msg.session;
   const queue = (pending = []);
   setOverlay('Connecting to ' + (streamName || 'the other computer') + '…');

@@ -293,10 +293,11 @@ class Turn {
 
 // The relay in a worker thread: the same start / ice / stop as Turn.
 class TurnThread {
-  constructor({ port, host = '127.0.0.1' }) {
+  // password: a fixed one (the cloud relay's, the same on both computers), else a fresh one.
+  constructor({ port, host = '127.0.0.1', password }) {
     this.port = port;
     this.host = host;
-    this.password = crypto.randomBytes(12).toString('hex');
+    this.password = password || crypto.randomBytes(12).toString('hex');
     this.worker = null;
   }
 

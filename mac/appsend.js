@@ -212,6 +212,7 @@ class AppSend extends EventEmitter {
         this._toWin({
           t: 'start', session, sourceId: src ? src.id : `window:${wid}:0`, width: MAX_W, height: MAX_H, follow: true,
           mbps: this.getSettings().bitrateMbps, fps, offer: { kind: 'window', wid },
+          ice: (this.server.current && this.server.current.ice) || null, // through the cloud relay: its TURN relays
         });
       }
     }

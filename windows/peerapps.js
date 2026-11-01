@@ -276,7 +276,7 @@ class PeerApps {
     const w = this.wins.get(Number(m.wid));
     if (!w || w.win.isDestroyed()) return; // not listed yet: the sender lists before it offers
     w.session = m.session;
-    this._toWin(w, { t: 'offer', session: m.session, sdp: m.sdp, pacing: this.settings.monitor.pacing || 'fast' });
+    this._toWin(w, { t: 'offer', session: m.session, sdp: m.sdp, pacing: this.settings.monitor.pacing || 'fast', ice: (this.link.current || {}).ice || null }); // the cloud relay's TURN relays
   }
 
   _toWin(w, m) {

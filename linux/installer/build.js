@@ -44,8 +44,16 @@ function copyDeps(names, seen = new Set()) {
 }
 
 async function main() {
-  console.log('Building the helper…');
-  execFileSync('sh', [path.join(ROOT, 'linux-helper', 'build.sh')], { stdio: 'inherit' });
+  // The helper needs Linux's X11 headers; elsewhere (a Mac) the package reuses the binaries already
+  // in linux-helper/bin/, e.g. ones taken from the last release (as windows/installer/build.js does).
+  if (process.platform === 'linux') {
+    console.log('Building the helper…');
+    execFileSync('sh', [path.join(ROOT, 'linux-helper', 'build.sh')], { stdio: 'inherit' });
+  } else if (!fs.existsSync(path.join(ROOT, 'linux-helper', 'bin', 'macshare-linuxhelper'))) {
+    throw new Error('Not on Linux: put the built helpers (macshare-linuxhelper…) in linux-helper/bin/ first');
+  } else {
+    console.log('Not on Linux: using the helpers already in linux-helper/bin/');
+  }
 
   console.log('Staging…');
   fs.rmSync(STAGE, { recursive: true, force: true });

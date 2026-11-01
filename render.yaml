@@ -1,0 +1,13 @@
+# Render Blueprint for the DuoDesk cloud relay (relay/). New › Blueprint › this repository.
+services:
+  - type: web
+    name: duodesk-relay
+    runtime: node
+    rootDir: relay
+    plan: free # free instances sleep after 15 min without requests; Starter keeps it always on
+    buildCommand: npm ci --omit=dev
+    startCommand: node server.js
+    healthCheckPath: /
+    envVars:
+      - key: RELAY_TOKEN
+        generateValue: true # copy it from the Render dashboard into Cloud relay › Access token

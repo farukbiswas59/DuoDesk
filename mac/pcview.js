@@ -79,7 +79,8 @@ class PcView extends EventEmitter {
       if (m.framegen !== undefined) {
         this.cfg.framegen = !!m.framegen;
         this.saveSettings();
-        this._toWin({ t: 'pacing', pacing: this.getSettings().sharing.pace || 'fast', framegen: !!this.cfg.framegen });
+        this._toWin({ t: 'pacing', pacing: this.getSettings().sharing.pace || 'fast', framegen: !!this.cfg.framegen,
+      ice: (this.server.current && this.server.current.ice) || null }); // through the cloud relay: its TURN relays
         this.emit('change');
       }
       if (m.fullScreen && this.win) this.win.setFullScreen(!this.win.isFullScreen());
@@ -129,7 +130,8 @@ class PcView extends EventEmitter {
     clearTimeout(this.closeTimer);
     this._open();
     this._toWin({ t: 'offer', session: m.session, sdp: m.sdp, audio: m.kind === 'screen+audio', volume: this.getSettings().audio.volume, input: !!this.cfg.input,
-      pacing: this.getSettings().sharing.pace || 'fast', framegen: !!this.cfg.framegen });
+      pacing: this.getSettings().sharing.pace || 'fast', framegen: !!this.cfg.framegen,
+      ice: (this.server.current && this.server.current.ice) || null }); // through the cloud relay: its TURN relays
     if (this.remote) this._toWin({ t: 'remote', ...this.remote });
     this.emit('change');
   }
@@ -257,7 +259,8 @@ class PcView extends EventEmitter {
     if (!this.cfg.input) this._releaseKeys();
     this._toWin({ t: 'input', on: !!this.cfg.input });
     this._toWin({ t: 'volume', volume: this.getSettings().audio.volume });
-    this._toWin({ t: 'pacing', pacing: this.getSettings().sharing.pace || 'fast', framegen: !!this.cfg.framegen });
+    this._toWin({ t: 'pacing', pacing: this.getSettings().sharing.pace || 'fast', framegen: !!this.cfg.framegen,
+      ice: (this.server.current && this.server.current.ice) || null }); // through the cloud relay: its TURN relays
     if (this.win && !this.win.isDestroyed() && this.win.isFullScreen() !== !!this.cfg.fullScreen) this.win.setFullScreen(!!this.cfg.fullScreen);
   }
 

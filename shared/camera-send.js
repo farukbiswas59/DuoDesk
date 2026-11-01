@@ -11,7 +11,7 @@ let me = null; // {pc, stream, pending}
 
 const status = (s, error = '') => api.send({ t: 'status', status: s, error });
 
-async function start(deviceId) {
+async function start(deviceId, ice) {
   stop();
   const cur = (me = { pc: null, stream: null, pending: [] });
   const alive = () => me === cur;
@@ -31,7 +31,7 @@ async function start(deviceId) {
     const track = stream.getVideoTracks()[0];
     track.contentHint = 'motion';
     track.onended = () => alive() && status('failed', 'the camera went away');
-    const pc = (cur.pc = new RTCPeerConnection({ iceServers: [] }));
+    const pc = (cur.pc = new RTCPeerConnection(ice || { iceServers: [] }));
     const tr = pc.addTransceiver(track, { direction: 'sendonly', streams: [stream] });
     pc.onicecandidate = (e) => e.candidate && alive() && api.send({ t: 'ice', candidate: e.candidate.toJSON() });
     pc.onconnectionstatechange = () => {
@@ -93,7 +93,7 @@ async function devices() {
 
 api.on((m) => {
   if (!m) return;
-  if (m.t === 'start') start(m.deviceId || '');
+  if (m.t === 'start') start(m.deviceId || '', m.ice);
   else if (m.t === 'answer') answer(m.sdp);
   else if (m.t === 'ice') ice(m.candidate);
   else if (m.t === 'stop') stop();

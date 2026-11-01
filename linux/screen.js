@@ -33,7 +33,8 @@ class Screen {
 
     const link = this.link;
     link.on(T.STREAM_INFO, (m) => this._onInfo(m));
-    link.on(T.RTC_OFFER, (m) => typeof m.sdp === 'string' && this._relay(m));
+    // ice: the host's RTCConfiguration for this session (a phone's cable, the cloud relay), else ours.
+    link.on(T.RTC_OFFER, (m) => typeof m.sdp === 'string' && this._relay(m.ice ? m : { ...m, ice: (this.link.current || {}).ice || null }));
     link.on(T.RTC_ICE, (m) => this._relay(m));
     link.on(T.STREAM_STOP, () => this._stop());
     link.on(T.STREAM_INPUT, (m) => this._setMacInput(m.on !== false));

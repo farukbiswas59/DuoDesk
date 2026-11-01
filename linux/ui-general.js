@@ -68,6 +68,7 @@ UI.tab({
       partSw[k] = UI.switch((v) => api.setOverview && api.setOverview({ [k]: v }), { label });
       return UI.row(label, hint, [partSw[k]]);
     });
+    const relay = UI.relayCard ? UI.relayCard() : null; // Cloud relay (shared/ui-relay.js)
     body.append(
       UI.card('Startup', [
         UI.row('Open at login', 'Starts in the tray', [startup]),
@@ -80,6 +81,7 @@ UI.tab({
       ]),
       UI.card('Overview', partRows),
       UI.card('Network and Bluetooth', [bleRow, blePcRow, bleWifiRow, wakeRow, keepRow]),
+      ...(relay ? [relay.el] : []),
       UI.card('Permissions', [fwRow, btRow, steadyRow]),
       UI.card('This computer', [deviceRow, sessRow, inRow, helperRow]),
       UI.card('Quit', [
@@ -89,6 +91,7 @@ UI.tab({
 
     return (s) => {
       media.update(s);
+      if (relay) relay.update(s);
       wallSw.set(!s.phone || !s.phone.settings || s.phone.settings.wallpaper !== false);
       const ov = (s.ui && s.ui.overview) || {};
       for (const k of Object.keys(partSw)) partSw[k].set(ov[k] !== false);

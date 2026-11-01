@@ -461,6 +461,13 @@ phone's **hotspot**.
 Who can turn up over Bluetooth is up to you: **Bluetooth with phones** (on) and **Bluetooth with
 computers** (off until you want it), on the Overview and in General.
 
+**Not on the same network at all?** With **Cloud relay** (General › Cloud relay) your home computer
+and your office computer both connect out to a small relay server you run (`relay/`, one click on
+Render or Fly.io), and work together as if they sat side by side: see and control the other screen,
+its apps, files, clipboard and sound. Everything is end-to-end encrypted with a relay code only your
+two computers know, and pairing from the office needs nobody at home. See
+[docs/cloud-relay.md](docs/cloud-relay.md).
+
 ---
 
 # 🚀 Get started

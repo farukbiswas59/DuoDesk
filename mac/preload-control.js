@@ -29,6 +29,7 @@ for (const name of ACTIONS) api[name] = (arg) => ipcRenderer.send(name, arg);
 // Tip and Feedback (shared/support.js): these answer, so they are invokes (like qrPair), not sends
 for (const [name, ch] of [['supportInfo', 'support:info'], ['supportProfile', 'support:profile'], ['supportTip', 'support:tip'], ['supportFeedback', 'support:feedback'], ['supportPreview', 'support:preview']]) api[name] = (arg) => ipcRenderer.invoke(ch, arg);
 api.qrPair = () => ipcRenderer.invoke('qrPair'); // Connection: pair a phone with a QR code (its link)
+api.relay = (m) => ipcRenderer.invoke('relay', m); // General › Cloud relay (shared/ui-relay.js)
 api.setReZume = api.setRezume; // the shared ReZume page (shared/ui-rezume.js) says it the PC's way
 // The one action with two arguments (Camera › Start and Window: {facing, show}): sent as one.
 api.phoneCamera = (open, opts) => ipcRenderer.send('phoneCamera', { open, opts });

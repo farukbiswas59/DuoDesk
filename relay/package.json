@@ -1,0 +1,16 @@
+{
+  "name": "duodesk-relay",
+  "version": "1.0.0",
+  "description": "DuoDesk cloud relay: lets two DuoDesk computers on different networks reach each other. Sees only end-to-end sealed bytes.",
+  "license": "GPL-3.0",
+  "main": "server.js",
+  "private": true,
+  "engines": { "node": ">=18" },
+  "scripts": {
+    "start": "node server.js",
+    "test": "node test/tunnel.js"
+  },
+  "dependencies": {
+    "ws": "^8.18.0"
+  }
+}

@@ -54,8 +54,9 @@ class Sender extends EventEmitter {
   }
 
   // A phone on the USB cable: WebRTC through the relay (wired.js), else null.
+  // Or the cloud relay's TURN relays (shared/cloudrelay.js), either side of the session.
   _ice() {
-    const c = this.link.hosting && this.link.server && this.link.server.current;
+    const c = this.link.current;
     return (c && c.ice) || null;
   }
 

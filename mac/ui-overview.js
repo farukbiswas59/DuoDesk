@@ -195,7 +195,7 @@ UI.tab({
           const label = online || going || (st && !st.fail) ? null : st ? 'Retry' : known ? 'Take over' : dev.os === 'mac' ? 'Pair' : 'Connect';
           const btn = label && UI.button(label, () => go(dev, kind), `small${dev.invited || st ? ' primary' : ''}`);
           const match = st && st.code ? UI.button(st.allow ? 'Allow' : 'Codes match', () => (st.allow ? api.pairRespond(true) : api.confirmGuestCode()), 'small primary') : null;
-          const hint = going ? 'Connecting…' : !st || st.ok ? `${dev.address}${dev.invited ? ' · wants to connect' : ''}`
+          const hint = going ? 'Connecting…' : !st || st.ok ? `${dev.relay ? 'Through the cloud relay' : dev.address}${dev.invited ? ' · wants to connect' : ''}`
             : st.code ? `Check the code: ${st.code.slice(0, 3)} ${st.code.slice(3)} (the same on ${dev.name}?)` : st.text;
           const r = UI.row(dev.name, hint, [
             going || (st && (st.busy || st.wait)) ? el('span', { class: 'spin', attrs: { 'aria-hidden': 'true' } }) : null,

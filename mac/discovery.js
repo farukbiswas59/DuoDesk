@@ -49,6 +49,7 @@ class Discovery extends EventEmitter {
     this.timers = [];
     this.sendErrors = new Set();
     this.extra = null; // Bluetooth (blepipe.js BleHost): devices near but not on this network, {list(), invite(id)}
+    this.relay = null; // the cloud relay (shared/cloudrelay.js): the computer on the other end, at 127.0.0.1
   }
 
   start() {
@@ -71,11 +72,13 @@ class Discovery extends EventEmitter {
     const out = [...this.found.values()]
       .map(({ id, name, os: o, address, port, fp, invited }) => ({ id, name, os: o, address, port, fp, invited: !!invited }));
     if (this.extra) for (const d of this.extra.list()) if (!this.found.has(d.id)) out.push({ ...d, invited: false });
+    if (this.relay) for (const d of this.relay.list()) if (!out.some((o) => o.id === d.id)) out.push(d);
     return out.sort((a, b) => (b.invited - a.invited) || a.name.localeCompare(b.name));
   }
 
   get(id) {
-    return this.found.get(id) || (this.extra && this.extra.list().find((d) => d.id === id)) || null;
+    return this.found.get(id) || (this.extra && this.extra.list().find((d) => d.id === id))
+      || (this.relay && this.relay.list().find((d) => d.id === id)) || null;
   }
 
   // Broadcast a probe (everyone answers with a beacon), or unicast it to one address.
@@ -113,6 +116,8 @@ class Discovery extends EventEmitter {
 
   // A Mac asks a PC to pair/connect to it (the Mac stays the host).
   invite(address) {
+    const far = this.relay && this.relay.list().find((d) => d.address === address);
+    if (far) return void this.relay.invite(far.id);
     if (String(address).startsWith('ble:')) {
       const d = this.extra && this.extra.list().find((x) => x.address === address);
       if (d) this.extra.invite(d.id);

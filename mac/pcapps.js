@@ -295,7 +295,7 @@ class PcApps extends EventEmitter {
     const w = this.wins.get(Number(m.wid));
     if (!w || w.win.isDestroyed()) return; // not listed (yet): the PC lists before it offers
     w.session = m.session;
-    this._toWin(w, { t: 'offer', session: m.session, sdp: m.sdp, audio: false, volume: 0, input: true });
+    this._toWin(w, { t: 'offer', session: m.session, sdp: m.sdp, audio: false, volume: 0, input: true, ice: (this.server.current && this.server.current.ice) || null });
   }
 
   _toWin(w, m) {

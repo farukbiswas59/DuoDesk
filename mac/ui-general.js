@@ -67,6 +67,7 @@ UI.tab({
       return UI.row(label, hint, [partSw[k]]);
     });
 
+    const relay = UI.relayCard ? UI.relayCard() : null; // Cloud relay (shared/ui-relay.js)
     body.append(
       UI.card('Startup', [
         UI.row('Open at login', '', [loginSw]),
@@ -79,6 +80,7 @@ UI.tab({
       ]),
       UI.card('Overview', partRows),
       UI.card('Network and Bluetooth', [bleRow, blePcRow, bleWifiRow, wakeRow, shareRow]),
+      ...(relay ? [relay.el] : []),
       UI.card('Permissions', [
         ...perms.map((x) => x.row),
         UI.row('Changed a permission?', 'Restart to apply it', [UI.button('Restart', () => api.relaunch(), 'small')]),
@@ -88,6 +90,7 @@ UI.tab({
 
     return (s) => {
       media.update(s);
+      if (relay) relay.update(s);
       wallSw.set(!s.phone || !s.phone.settings || s.phone.settings.wallpaper !== false);
       const ov = (s.ui && s.ui.overview) || {};
       for (const k of Object.keys(partSw)) partSw[k].set(ov[k] !== false);

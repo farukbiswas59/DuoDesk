@@ -253,7 +253,7 @@ UI.tab({
           if (take) take.disabled = busy;
           const match = st && st.code ? UI.button('Codes match', () => api.confirmCode(), 'small primary') : null;
           if (btn && dev.invited && !busy) focus = btn;
-          const hint = !st || st.ok ? dev.address + (dev.invited ? ' · wants to connect' : '')
+          const hint = !st || st.ok ? (dev.relay ? 'Through the cloud relay' : dev.address) + (dev.invited ? ' · wants to connect' : '')
             : st.code ? 'Check the code: ' + st.code.slice(0, 3) + ' ' + st.code.slice(3) + ' (the same on ' + dev.name + '?)'
               : st.text;
           const r = UI.row(dev.name, hint, [

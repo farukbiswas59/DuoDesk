@@ -20,6 +20,7 @@ contextBridge.exposeInMainWorld('macshare', {
   setOverview: call('setOverview'), // General › Overview: what it shows
   setChats: call('setChats'), // Messages: chat apps in one inbox
   qrPair: call('qrPair'), // Connection: pair a phone with a QR code
+  relay: call('relay'), // General › Cloud relay (shared/ui-relay.js)
   adbQr: call('adbQr'), // wireless debugging: pair with a QR code (on / off)
   notifReply: call('notifReply'), // answer a phone chat's notification
   skipSetup: call('skipSetup'),

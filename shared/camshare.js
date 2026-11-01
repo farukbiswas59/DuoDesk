@@ -44,7 +44,8 @@ class CamShare {
       if (this.viewer) this._viewStatus('ended');
     });
     link.on(T.CAM_ANSWER, (m) => m && typeof m.sdp === 'string' && this._toSender({ t: 'answer', sdp: m.sdp }));
-    link.on(T.CAM_OFFER, (m) => m && typeof m.sdp === 'string' && this._toViewer({ t: 'offer', sdp: m.sdp }));
+    // ice: the session's RTCConfiguration when it has one (the cloud relay's TURN relays)
+    link.on(T.CAM_OFFER, (m) => m && typeof m.sdp === 'string' && this._toViewer({ t: 'offer', sdp: m.sdp, ice: this.link.ice ? this.link.ice() : null }));
     link.on(T.CAM_ICE, (m) => {
       if (!m || !m.candidate) return;
       if (m.from === 'view') this._toSender({ t: 'ice', candidate: m.candidate });
@@ -111,7 +112,7 @@ class CamShare {
     if (!this.share) return this.link.send({ t: T.CAM_STATE, status: 'refused' });
     if (this.link.ble()) return this.link.send({ t: T.CAM_STATE, status: 'failed', error: 'needs Wi-Fi or a cable: not through Bluetooth' });
     this._stopSending(false);
-    this._toSender({ t: 'start', deviceId: this.cfg().device || '' }, true);
+    this._toSender({ t: 'start', deviceId: this.cfg().device || '', ice: this.link.ice ? this.link.ice() : null }, true);
     this.sender.status = 'starting';
     this.link.send({ t: T.CAM_STATE, status: 'starting' });
     this.popup('driven', `${this.peerName()} is viewing this computer’s camera`);

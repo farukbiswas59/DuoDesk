@@ -60,10 +60,10 @@ function reset() {
 }
 
 // Candidates that came before the offer (the sender gathers as it sends it) are kept for it.
-async function offer(sdp) {
+async function offer(sdp, ice) {
   if (pc) pc.close();
   if (!pending) pending = [];
-  const me = (pc = new RTCPeerConnection({ iceServers: [] }));
+  const me = (pc = new RTCPeerConnection(ice || { iceServers: [] }));
   me.ontrack = (e) => {
     video.srcObject = e.streams[0] || new MediaStream([e.track]);
     video.play().catch(() => {});
@@ -88,7 +88,7 @@ async function offer(sdp) {
 
 api.on((m) => {
   if (!m) return;
-  if (m.t === 'offer') offer(m.sdp);
+  if (m.t === 'offer') offer(m.sdp, m.ice);
   else if (m.t === 'ice') {
     if (!pc || pending) (pending || (pending = [])).push(m.candidate);
     else pc.addIceCandidate(m.candidate).catch(() => {});

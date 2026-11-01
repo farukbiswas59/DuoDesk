@@ -71,6 +71,7 @@ const { Server } = require('./server');
 const { Pairing } = require('./pairing');
 const { startServices } = require('./services');
 const { setupIpc, TABS } = require('./ipc');
+const { CloudRelay } = require('../shared/cloudrelay.js');
 const login = require('./login');
 const { Hud } = require('./hud');
 const { PairSync } = require('./pairsync');
@@ -91,7 +92,7 @@ let lockKey = null; // the cursor lock key at home (shared/cursorlock.js)
 let hud = null;
 let quitting = false;
 let startHidden = process.argv.includes('--hidden');
-let settings, id, server, pairing, discovery, link, peer, svc, actions, pairSync, updates;
+let settings, id, server, pairing, discovery, link, peer, svc, actions, pairSync, updates, relay;
 let phoneHub = null; // Calls, Messages and Photos (loadHub); svc.hub is the Mac's sound capture (audiohub.js)
 
 const state = {
@@ -185,6 +186,7 @@ function pushState() {
       state.found = discovery.list();
     }
     if (link) state.guest = link.view();
+    if (relay) state.relay = relay.view();
     const c = peer && peer.current;
     state.client = c ? { id: c.deviceId, name: c.name, os: c.os, role: c.role, address: c.address, rttMs: c.rttMs, transport: c.transport || 'ip' } : null;
     if (svc && svc.net) {
@@ -552,6 +554,22 @@ app.whenReady().then(() => {
   server.on('phoneFree', () => { link.poke(); pushState(); });
   pairing.on('change', pushState);
   pairing.on('request', showWindow);
+  // The cloud relay (shared/cloudrelay.js): a computer on another network, as if it were here.
+  relay = new CloudRelay({ WebSocket: require('ws'), info: () => ({ ...discovery.self }) });
+  discovery.relay = relay;
+  relay.on('change', pushState);
+  relay.watchHost(server, pairing);
+  link.on('change', () => relay.autoConfirm(() => link.pairState, () => link.confirmCode()));
+  link.prependListener('welcome', (ctx) => { ctx.ice = relay.isRelaySocket(ctx.ws) ? relay.ice() : null; });
+  // A Mac host asked through the relay: back to it if paired, else pair with it (no one has to be there).
+  relay.on('invite', (d) => {
+    if (!d) return;
+    relay.clearInvite(d.id);
+    if (link.hosts.some((h) => h.id === d.id)) return discovery.emit('invite', d);
+    if (!server.current && !link.pairState) link.startPairing({ address: d.address, port: d.port, name: d.name });
+  });
+  require('electron').ipcMain.handle('relay', (_e, m) => relay.handle(m)); // General › Cloud relay (shared/ui-relay.js)
+  relay.load(store);
   peer = new Peer(server, link);
   peer.on('client', (ctx) => {
     console.log(`[peer] session with ${ctx.name} (${ctx.os}, ${ctx.role === 'host' ? 'we are its guest' : 'it is our guest'})`);
@@ -662,6 +680,7 @@ app.whenReady().then(() => {
         send: (m) => peer.sendToClient(m),
         connected: computer,
         ble: () => !!(peer.current && peer.current.transport === 'ble'),
+        ice: () => (peer.current && peer.current.ice) || null, // the cloud relay's TURN relays
         closed: (fn) => peer.on('closed', fn),
       },
       cfg: () => settings.camera,
